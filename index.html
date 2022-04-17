@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+  <title>SWEN1005 - Movie API usage</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      padding: 0;
+      margin: 0;
+    }
+
+    :root {
+      --dialog_title_color: rgb(10, 140, 216);
+      --dialog_color: #313030;
+      --accent_color: #e44d26;
+    }
+
+    body {
+      background-color: rgb(27, 27, 27);
+    }
+
+    main {
+      width: 95%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      height: 350px;
+      width: 100%;
+      position: relative;
+
+    }
+
+    .card>img {
+      width: 100%;
+      height: 100%;
+    }
+
+    @keyframes details_showup {
+      from {
+        opacity: 0;
+        top: 275px
+      }
+
+      to {
+        opacity: 1;
+        top: 10px
+      }
+    }
+
+    .details {
+      color: white;
+      background-color: #2e2d2d;
+      position: absolute;
+      top: 10px;
+      width: 65%;
+      left: 17%;
+      border-radius: 10px;
+      padding: 10px;
+      display: none;
+      z-index: 1;
+      overflow: hidden;
+      padding-top: 35px;
+      animation-name: details_showup;
+      animation-duration: 0.75s;
+    }
+
+    .detail_bar {
+      padding: 10px;
+      background-color: blue;
+      color: white;
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      right: 0px;
+      display: flex;
+      letter-spacing: .25rem;
+      font-size: 1.15rem;
+    }
+
+    .detail_bar>i {
+      margin-left: auto;
+    }
+
+    header {
+      height: 3.5rem;
+      background-color: var(--accent_color);
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      color: white;
+      z-index: 2;
+      font-size: 1.25rem;
+    }
+
+    header select {
+      padding: 0.5rem;
+    }
+
+    header select:focus {
+      outline: none;
+    }
+
+    header>div:nth-child(1) {
+      margin-left: 0.5rem;
+    }
+
+    header>span:nth-child(2),
+    span:nth-child(3) {
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+
+    header>span:nth-child(2) {
+      border-bottom: 3px solid white;
+    }
+
+    /*PAGINATION STYLES*/
+    .pagination {
+      margin-bottom: 0.5rem !important;
+      background-color: #494747;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      padding: 0.5rem;
+      width: 90%;
+      margin: 0 auto;
+      border-radius: 5px;
+    }
+
+    .page_item {
+      padding: 0.75rem;
+      border: white 1px solid;
+      border-radius: 5px;
+      font-size: 0.75rem;
+    }
+
+    .page_item:hover {
+      background-color: #6d6a6a;
+    }
+
+    .active {
+      background-color: var(--accent_color);
+      color: white;
+    }
+
+    @media only screen and (min-width: 768px) {
+      main {
+        width: 85%;
+      }
+
+      .pagination {
+        width: 40%;
+      }
+
+      .details {
+        width: 100%;
+        left: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <span>Trending Period:</span>
+    <span>Day</span>
+    <span>Week</span>
+  </header>
+  <main></main>
+  <div class="pagination"></div>
+
+  <script>
+    getTrending("day", 1);
+    var numberOfRecord = 0;
+    var noPerPage = 20;
+    const main = document.querySelector("main");
+    const period = document.querySelectorAll(
+      "header > span:nth-child(2),span:nth-child(3)"
+    );
+    period.forEach((item) => {
+      item.addEventListener("click", (e) => {
+        if (e.target.innerHTML == "Day") {
+          document.querySelector(
+            "header > span:nth-child(2)"
+          ).style.borderBottom = "3px solid white";
+          document.querySelector(
+            "header > span:nth-child(3)"
+          ).style.borderBottom = "3px solid transparent";
+          getTrending("day", 1);
+        } else {
+          document.querySelector(
+            "header > span:nth-child(2)"
+          ).style.borderBottom = "3px solid transparent";
+          document.querySelector(
+            "header > span:nth-child(3)"
+          ).style.borderBottom = "3px solid white";
+          getTrending("week", 1);
+        }
+      });
+    });
+    function getTrending(period, page) {
+      //let title = "Hard";
+      //  url = "https://api.themoviedb.org/3/search/movie?api_key=0ec34df5d0c8cb3d043e3b69a2b2e1dc&language=en-US&page="+page+"&include_adult=false&query="+title  //search for movie name
+      //url = "https://api.themoviedb.org/3/search/keyword?api_key=0ec34df5d0c8cb3d043e3b69a2b2e1dc&page=1&query=die"  //ID and name
+      //url = "https://api.themoviedb.org/3/movie/17192?api_key=0ec34df5d0c8cb3d043e3b69a2b2e1dc"
+      //url = https://api.themoviedb.org/3/search/movie?query='jaw'&api_key=0ec34df5d0c8cb3d043e3b69a2b2e1dc; //search for movie name
+
+      
+      url =
+        "https://api.themoviedb.org/3/trending/movie/" +
+        period +
+        "?api_key=0ec34df5d0c8cb3d043e3b69a2b2e1dc&page=" +
+        page;
+      fetch(url)
+        .then((res) => res.json())
+        .then((data) => {
+          numberOfRecord = data.total_results;
+          removeAllChildNodes(main);
+          data.results.forEach((element) => {
+            let card = document.createElement("div");
+            let detail = document.createElement("div");
+            let image = document.createElement("img");
+            card.classList.add("card");
+            detail.classList.add("details");
+            card.appendChild(image);
+            card.appendChild(detail);
+            image.src =
+              "https://image.tmdb.org/t/p/w500" + element["poster_path"];
+            image.dataset.id = element["id"];
+            image.dataset.title = element["original_title"];
+            image.dataset.overview = element["overview"];
+            image.dataset.releaseDate = element["release_date"];
+            image.addEventListener("click", (item) => {
+              document.querySelectorAll(".details").forEach((item) => {
+                item.style.display = "None"
+              })
+              detail.innerHTML = "<div class='detail_bar'><b>Movie Details</b><i class='fa fa-times' aria-hidden='true'></i></div><br><b>ID : </b><br>" +
+                item.target.dataset.id +
+                "<br><br><b>TITLE : </b><br>" +
+                item.target.dataset.title +
+                "<br><br><b>OVERVIEW : </b><br>" +
+                item.target.dataset.overview +
+                "<br><br><b>RELEASE DATE : </b><br>" +
+                item.target.dataset.releaseDate;
+              detail.style.display = "block"
+              document.querySelectorAll(".detail_bar > i").forEach((item) => item.addEventListener("click", (e) => {
+                e.target.parentNode.parentNode.style.display = "None"
+              }))
+            });
+            main.appendChild(card);
+          });
+          Paging(page);
+        });
+    }
+    function removeAllChildNodes(parent) {
+      while (parent.firstChild) parent.removeChild(parent.firstChild);
+    }
+    function Paging(page) {
+      const Pagination = document.querySelector(".pagination");
+      removeAllChildNodes(Pagination);
+      var x = 1;
+      var y = 10;
+      if (page > 5) {
+        x = page - 5;
+        y = x + 9;
+      }
+      let pages = Math.ceil(numberOfRecord / noPerPage);
+      if (y > pages) {
+        y = pages;
+        if (y <= 10) {
+          x = 1;
+        }
+        Pagination.style.justifyContent = "center";
+      } else {
+        Pagination.style.justifyContent = "space-between";
+      }
+      for (; x <= y; x++) {
+        let item = document.createElement("div");
+        item.classList.add("page_item");
+        if (x == page) {
+          item.classList.add("active");
+        }
+        Pagination.style.justifyContent == "center"
+          ? (item.style.marginLeft = "0.5rem")
+          : (item.style.marginLeft = "0rem");
+        let num = document.createTextNode(x);
+        item.appendChild(num);
+        item.addEventListener("click", (e) => {
+          removeAllChildNodes(main);
+          if (
+            document.querySelector("header > span:nth-child(2)").innerHTML ==
+            "Day"
+          ) {
+            getTrending("day", e.target.innerHTML);
+          } else {
+            getTrending("week", e.target.innerHTML);
+          }
+        });
+        Pagination.appendChild(item);
+      }
+    }
+  </script>
+</body>
+
+</html>
